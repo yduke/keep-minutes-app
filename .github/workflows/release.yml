@@ -1,11 +1,12 @@
 name: Build and Release
 
 on:
+  workflow_dispatch: 
   push:
     tags:
-      - 'v*' # 本地 tag 推送触发
+      - 'v*'
   release:
-    types: [published] # GitHub 网页发布 Release 触发
+    types: [published]
 
 jobs:
   release:
