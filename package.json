@@ -4,10 +4,30 @@
   "description": "Write down your thoughts and ideas in desktop app.",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder",
+    "release": "electron-builder --publish always"
+  },
+  "build": {
+    "appId": "com.yduke.keepminutes",
+    "productName": "Keep Minutes App",
+    "files": [
+      "**/*",
+      "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/*.{map,ts}",
+      "!src/"
+    ],
+    "mac": {
+      "target": ["dmg"],
+      "icon": "assets/icon.icns"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "assets/icon.ico"
+    }
   },
   "devDependencies": {
-    "electron": "^27.3.11",
-    "electron-builder": "^26.0.12"
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
   }
 }
