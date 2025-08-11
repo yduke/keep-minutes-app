@@ -1,16 +1,22 @@
 {
   "name": "keep-minutes-app",
   "version": "1.0.0",
-  "description": "Write down your thoughts and ideas in desktop app.",
+  "description": "Keep Minutes App - Electron App",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "release": "electron-builder --publish always"
   },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.13.3"
+  },
   "build": {
     "appId": "com.yduke.keepminutes",
-    "productName": "Keep Minutes App",
+    "productName": "KeepMinutesApp",
+    "artifactName": "${productName}-${version}-${os}.${ext}", 
     "files": [
       "**/*",
       "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
@@ -25,9 +31,5 @@
       "target": ["nsis"],
       "icon": "assets/icon.ico"
     }
-  },
-  "devDependencies": {
-    "electron": "^31.0.0",
-    "electron-builder": "^24.13.3"
   }
 }
