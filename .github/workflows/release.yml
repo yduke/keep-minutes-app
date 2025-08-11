@@ -1,9 +1,8 @@
 name: Build and Release
 
 on:
-  push:
-    tags:
-      - 'v*' # 例如 v1.0.0 这样的标签才触发
+  release:
+    types: [published] # 当发布 Release（不管是网页还是 API）时触发
 
 jobs:
   release:
