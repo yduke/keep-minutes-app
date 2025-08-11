@@ -1,0 +1,13 @@
+{
+  "name": "keep-minutes-app",
+  "version": "1.0.0",
+  "description": "Write down your thoughts and ideas in desktop app.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^27.3.11",
+    "electron-builder": "^26.0.12"
+  }
+}

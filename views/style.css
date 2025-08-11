@@ -1,0 +1,136 @@
+:root {
+  --bg: #f7f8fa;
+  --card: #fff;
+  --muted: #666;
+  --accent: #0b84ff;
+  --danger: #d9534f;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+html,body,#app {
+  margin: 0;
+  padding: 5px;
+  background: var(--bg);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.page {
+  box-sizing: border-box;
+  padding: 18px;
+  width: 100%;
+  height: 100%;
+}
+
+.hidden { display: none; }
+
+#page-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+h1 {
+  margin: 4px 0 6px 0;
+  font-size: 20px;
+}
+
+.hint {
+  margin: 0 0 12px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+input[type="text"], input[type="url"] {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: var(--card);
+  outline: none;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.row {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+button {
+  margin-top: 20px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  width: 100%;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.status {
+  margin-top: 12px;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+#page-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+}
+
+#topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+}
+
+#topbar #server-label {
+  font-size: 13px;
+  color: #333;
+  padding-right: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+#btn-change {
+  background: #ff6b6b;
+}
+
+#webview-container {
+  flex: 1;
+  height: calc(100% - 48px);
+  background: #fff;
+}
+
+#errorMsg {
+    display: none;
+    color: white;
+    background-color: #e74c3c;
+    padding: 8px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    animation: fadein 0.3s ease-out;
+}
+@keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>输入服务器URL</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <h3>请输入服务器 URL</h3>
+    <div id="errorMsg"></div>
+    <input id="urlInput" type="text" placeholder="例如：https://example.com">
+    <button id="confirmBtn">确认</button>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        let hideTimeout = null;
+
+        function validateAndSave() {
+            const url = urlInput.value.trim();
+
+            if (!/^https?:\/\//.test(url)) {
+                showError('必须以 http 或 https 开头');
+                return;
+            }
+
+            window.electronAPI.saveURL(url);
+        }
+
+        confirmBtn.addEventListener('click', validateAndSave);
+
+        // 监听回车键提交
+        urlInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                validateAndSave();
+            }
+        });
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            
+            if (hideTimeout) clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(() => {
+                errorMsg.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
