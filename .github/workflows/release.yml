@@ -30,8 +30,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build and release
-        run: npm run release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build
+        run: npm run dist
 
+      - name: Upload Artifacts
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/${{ matrix.os == 'macos-latest' && 'KeepMinutesApp-*-mac.dmg' || 'KeepMinutesApp-*-win.exe' }}
+          asset_name: ${{ matrix.os == 'macos-latest' && 'KeepMinutesApp-mac.dmg' || 'KeepMinutesApp-win.exe' }}
+          asset_content_type: ${{ matrix.os == 'macos-latest' && 'application/octet-stream' || 'application/vnd.microsoft.portable-executable' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
