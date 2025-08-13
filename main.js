@@ -34,7 +34,7 @@ function createWindow(startURL) {
             webviewTag: true
         }
     });
-
+// mainWindow.webContents.openDevTools();
     if (startURL) {
         mainWindow.loadFile(path.join(__dirname, 'views/webview.html'));
     } else {
@@ -45,8 +45,18 @@ function createWindow(startURL) {
         {
             label: '更改服务器',
             click: () => {
-                if (fs.existsSync(STORE_PATH)) fs.unlinkSync(STORE_PATH);
-                mainWindow.loadFile(path.join(__dirname, 'views/url_input.html'));
+                dialog.showMessageBox(mainWindow, {
+                    type: 'question',
+                    buttons: ['确定', '取消'],
+                    defaultId: 1,
+                    title: '确认',
+                    message: '确定要更改服务器吗？这将会清除已保存的服务器地址。'
+                }).then(result => {
+                    if (result.response === 0) {
+                        if (fs.existsSync(STORE_PATH)) fs.unlinkSync(STORE_PATH);
+                        mainWindow.loadFile(path.join(__dirname, 'views/url_input.html'));
+                    }
+                });
             }
         },
         {
@@ -66,7 +76,22 @@ function createWindow(startURL) {
                 });
             }
         },
-        { role: 'quit', label: '退出' }
+        {
+            label: '退出',
+            click: () => {
+                dialog.showMessageBox(mainWindow, {
+                    type: 'question',
+                    buttons: ['确定', '取消'],
+                    defaultId: 1,
+                    title: '确认',
+                    message: '确定要退出吗？'
+                }).then(result => {
+                    if (result.response === 0) {
+                        app.quit();
+                    }
+                });
+            }
+        }
     ]);
     Menu.setApplicationMenu(menu);
 }
