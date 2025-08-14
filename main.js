@@ -26,7 +26,7 @@ function createWindow(startURL) {
     mainWindow = new BrowserWindow({
         width: 375,
         height: 812,
-        resizable: false,
+        resizable: true,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -34,7 +34,7 @@ function createWindow(startURL) {
             webviewTag: true
         }
     });
-// mainWindow.webContents.openDevTools();
+mainWindow.webContents.openDevTools();
     if (startURL) {
         mainWindow.loadFile(path.join(__dirname, 'views/webview.html'));
     } else {
@@ -52,9 +52,13 @@ function createWindow(startURL) {
                     title: '确认',
                     message: '确定要更改服务器吗？这将会清除已保存的服务器地址。'
                 }).then(result => {
+                    // If the user clicked "确定"
+                    console.log(result);
                     if (result.response === 0) {
                         if (fs.existsSync(STORE_PATH)) fs.unlinkSync(STORE_PATH);
                         mainWindow.loadFile(path.join(__dirname, 'views/url_input.html'));
+                    } else {
+                        return;
                     }
                 });
             }
