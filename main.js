@@ -1,24 +1,9 @@
 const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
-
 const STORE_PATH = path.join(app.getPath('userData'), 'storage.json');
 
-function loadURLFromStore() {
-    if (fs.existsSync(STORE_PATH)) {
-        try {
-            const data = JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
-            return data.url || null;
-        } catch {
-            return null;
-        }
-    }
-    return null;
-}
 
-function saveURLToStore(url) {
-    fs.writeFileSync(STORE_PATH, JSON.stringify({ url }));
-}
 
 let mainWindow;
 
@@ -26,7 +11,8 @@ function createWindow(startURL) {
     mainWindow = new BrowserWindow({
         width: 375,
         height: 812,
-        resizable: true,
+        resizable: false,
+        maximizable: false,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -34,7 +20,8 @@ function createWindow(startURL) {
             webviewTag: true
         }
     });
-mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools(); // Uncomment this line to open DevTools for debugging
+
     if (startURL) {
         mainWindow.loadFile(path.join(__dirname, 'views/webview.html'));
     } else {
@@ -50,10 +37,10 @@ mainWindow.webContents.openDevTools();
                     buttons: ['确定', '取消'],
                     defaultId: 1,
                     title: '确认',
-                    message: '确定要更改服务器吗？这将会清除已保存的服务器地址。'
+                    message: '确定要更改服务器吗？'
                 }).then(result => {
                     // If the user clicked "确定"
-                    console.log(result);
+                    // console.log(result);
                     if (result.response === 0) {
                         if (fs.existsSync(STORE_PATH)) fs.unlinkSync(STORE_PATH);
                         mainWindow.loadFile(path.join(__dirname, 'views/url_input.html'));
@@ -100,23 +87,45 @@ mainWindow.webContents.openDevTools();
     Menu.setApplicationMenu(menu);
 }
 
-app.whenReady().then(() => {
-    createWindow(loadURLFromStore());
+
+
+
+app.whenReady().then(async () => { // Make the callback async
+    createWindow();
+    // Dynamically import electron-store
+    const { default: Store } = await import('electron-store');
+    const store = new Store();
+
+    ipcMain.handle('get-urls', async () => {
+        return store.get('savedUrls') || [];
+    });
+
+
+    ipcMain.on('save-url', (event, url) => {
+        let urls = store.get('savedUrls') || [];
+        if (!Array.isArray(urls)) {
+            urls = [];
+        }
+        if (!urls.includes(url)) { // Prevent duplicates
+            urls.unshift(url);
+            urls = urls.slice(0, 3); // Limit to 3 URLs
+            store.set('savedUrls', urls);
+        }
+    });
+
+
+
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow();
+        }
+    });
+
+
+    app.on('window-all-closed', () => {
+        if (process.platform !== 'darwin') {
+            app.quit();
+        }
+    });
 });
 
-ipcMain.on('save-url', (event, url) => {
-    saveURLToStore(url);
-    mainWindow.loadFile(path.join(__dirname, 'views/webview.html'));
-});
-
-ipcMain.handle('get-url', () => {
-    return loadURLFromStore();
-});
-
-ipcMain.on('open-external', (event, link) => {
-    shell.openExternal(link);
-});
-
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit();
-});

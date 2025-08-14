@@ -11,17 +11,41 @@
     <p class="hint">请输入KeepMinus站点的URL地址</p>
     <p class="hint">必须以http或https开头</p>
     <div id="errorMsg"></div>
-    <input id="urlInput" type="text" placeholder="例如：https://example.com">
+    <input id="urlInput" type="text" placeholder="例如：https://example.com" value="https://" />
     <button id="confirmBtn">确认</button>
+
+    <div id="savedUrls" style="display: none;">
+        <h3>最近使用的URL</h3>
+        <ul></ul>
+    </div>
 
     <script>
         const urlInput = document.getElementById('urlInput');
         const confirmBtn = document.getElementById('confirmBtn');
         const errorMsg = document.getElementById('errorMsg');
+        const savedUrlsC = document.getElementById('savedUrls');
+        const savedUrlsList = document.querySelector('#savedUrls ul');
         let hideTimeout = null;
+        let savedUrls = [];
+
+        // Load saved URLs from local storage
+        window.electronAPI.getURLs().then(urls => {
+            savedUrls = urls || [];
+            console.log(savedUrls);
+            if (urls.length > 0) {
+                savedUrlsC.style.display = 'block';
+            }else{
+                savedUrlsC.style.display = 'none';
+            }
+            displaySavedUrls();
+        });
 
         function validateAndSave() {
             const url = urlInput.value.trim();
+            if (url === '' || url === 'https://'|| url === 'http://') {
+                showError('URL不能为空');
+                return;
+            }
 
             if (!/^https?:\/\//.test(url)) {
                 showError('必须以 http 或 https 开头');
@@ -32,17 +56,32 @@
                     
                     if (response!==null && response.ok) {
                         // console.log(response);
-                        window.electronAPI.saveURL(url);
+                        saveURL(url);
+                        window.location.href = `webview.html?url=${encodeURIComponent(url)}`;
                     }else{
                         showError('非KeepMinus站点');
                         return;
                     }
                 })
                 .catch(error => {
+                    // console.log(error);
                     showError('无法连接到该站点');
                     return;
                 });
 
+        }
+
+        function saveURL(url) {
+            if (url.endsWith('/')) {
+                url = url.slice(0, -1);
+            }
+            window.electronAPI.saveURL(url);
+
+            // Update the local savedUrls array and display
+            window.electronAPI.getURLs().then(urls => {
+                savedUrls = urls || [];
+                displaySavedUrls();
+            });
         }
 
         confirmBtn.addEventListener('click', validateAndSave);
@@ -62,6 +101,19 @@
             hideTimeout = setTimeout(() => {
                 errorMsg.style.display = 'none';
             }, 3000);
+        }
+
+        function displaySavedUrls() {
+            savedUrlsList.innerHTML = ''; // Clear existing list
+
+            savedUrls.forEach(url => {
+                const li = document.createElement('li');
+                li.textContent = url;
+                li.addEventListener('click', () => {
+                    urlInput.value = url; // Fill the input
+                });
+                savedUrlsList.appendChild(li);
+            });
         }
     </script>
 </body>

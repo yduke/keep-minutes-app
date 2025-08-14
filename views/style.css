@@ -139,3 +139,23 @@ button:disabled {
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+#savedUrls {
+    margin-top: 20px;
+}
+
+#savedUrls ul {
+    list-style: none;
+    padding: 0;
+}
+
+#savedUrls li {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+#savedUrls li:hover {
+    background-color: #f0f0f0;
+}

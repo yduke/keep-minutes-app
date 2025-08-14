@@ -19,55 +19,13 @@
     <webview id="myWebview" src="" partition="persist:appSession" allowpopups></webview>
 
     <script>
-        function getBaseDomain(hostname) {
-            const parts = hostname.split('.').filter(Boolean);
-            if (parts.length > 2) {
-                return parts.slice(-2).join('.');
-            }
-            return hostname;
+        const webview = document.getElementById('myWebview');
+        const urlParams = new URLSearchParams(window.location.search);
+        const url = urlParams.get('url');
+
+        if (url) {
+            webview.setAttribute('src', url);
         }
-
-        window.electronAPI.getURL().then(url => {
-            const webview = document.getElementById('myWebview');
-            webview.src = url;
-
-            let baseDomain = '';
-            try {
-                baseDomain = getBaseDomain(new URL(url).hostname);
-            } catch (e) {
-                console.error('无法解析初始URL', e);
-            }
-
-            // 新窗口事件
-            webview.addEventListener('new-window', (e) => {
-                try {
-                    const targetDomain = getBaseDomain(new URL(e.url).hostname);
-                    if (targetDomain === baseDomain) {
-                        webview.loadURL(e.url);
-                    } else {
-                        window.electronAPI.openExternal(e.url);
-                    }
-                } catch {
-                    window.electronAPI.openExternal(e.url);
-                }
-            });
-
-            // 页面跳转事件
-            webview.addEventListener('will-navigate', (e) => {
-                try {
-                    const targetDomain = getBaseDomain(new URL(e.url).hostname);
-                    if (targetDomain === baseDomain) {
-                        // 同域名跳转
-                    } else {
-                        e.preventDefault();
-                        window.electronAPI.openExternal(e.url);
-                    }
-                } catch {
-                    e.preventDefault();
-                    window.electronAPI.openExternal(e.url);
-                }
-            });
-        });
     </script>
 </body>
 </html>
