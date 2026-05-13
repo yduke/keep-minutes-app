@@ -44,6 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}       # ← 新增：透传 release id
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -133,25 +134,21 @@ jobs:
   # ─── 第五步：两个平台都完成后，将草稿 Release 正式发布 ───
   publish-release:
     name: Publish Release
-    needs: [create-release, build-windows]
+    needs: [create-release, build-windows]   # ← 可直接读 create-release 的 outputs
     runs-on: ubuntu-latest
     steps:
       - name: Publish Draft Release
         uses: actions/github-script@v7
         with:
           script: |
-            const releases = await github.rest.repos.listReleases({
-              owner: context.repo.owner,
-              repo:  context.repo.repo,
-            });
-            const draft = releases.data.find(r => r.draft && r.tag_name === `v${{ needs.check-version.outputs.version }}`);
-            if (!draft) { core.setFailed('Draft release not found'); return; }
+            const releaseId = '${{ needs.create-release.outputs.release_id }}';
+            if (!releaseId) { core.setFailed('release_id is empty — create-release may have been skipped'); return; }
             await github.rest.repos.updateRelease({
               owner:      context.repo.owner,
               repo:       context.repo.repo,
-              release_id: draft.id,
+              release_id: Number(releaseId),
               draft:      false,
             });
-            console.log(`✅ Release v${{ needs.check-version.outputs.version }} published!`);
+            console.log(`✅ Release ID ${releaseId} published!`);
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
