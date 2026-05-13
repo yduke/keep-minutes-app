@@ -159,3 +159,29 @@ button:disabled {
 #savedUrls li:hover {
     background-color: #f0f0f0;
 }
+
+/* ── 保存密码横幅 ── */
+#pw-banner {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    font: 13px/1.4 -apple-system, sans-serif;
+    box-shadow: 0 2px 12px rgba(0,0,0,.35);
+    z-index: 9999;
+}
+#pw-banner .banner-icon { font-size: 18px; flex-shrink: 0; }
+#pw-banner .banner-text { flex: 1; font-size: 12px; }
+#pw-banner .banner-text strong { display: block; font-size: 13px; color: #cba6f7; }
+#pw-banner button {
+    border: none; border-radius: 6px;
+    padding: 5px 12px; font-size: 12px;
+    cursor: pointer; flex-shrink: 0;
+}
+#btn-save    { background: #89b4fa; color: #1e1e2e; font-weight: 600; }
+#btn-dismiss { background: transparent; color: #a6adc8; }
+#btn-dismiss:hover { color: #cdd6f4; }

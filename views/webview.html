@@ -3,29 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <title>时光捕手</title>
+    <link rel="stylesheet" href="style.css" />
     <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
-        webview {
-            width: 100%;
-            height: 100%;
-        }
+html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+webview { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
-    <webview id="myWebview" src="" partition="persist:appSession" allowpopups></webview>
+
+    <!-- 保存密码提示横幅 -->
+    <div id="pw-banner">
+        <span class="banner-icon">🔑</span>
+        <div class="banner-text">
+            <strong id="banner-username"></strong>
+            <span id="banner-origin"></span>
+        </div>
+        <button id="btn-save">保存密码</button>
+        <button id="btn-dismiss">忽略</button>
+    </div>
+
+    <webview id="myWebview"
+        partition="persist:appSession"
+        allowpopups>
+    </webview>
 
     <script>
-        const webview = document.getElementById('myWebview');
+        const webview   = document.getElementById('myWebview');
+        const banner    = document.getElementById('pw-banner');
         const urlParams = new URLSearchParams(window.location.search);
-        const url = urlParams.get('url');
+        const targetUrl = urlParams.get('url');
 
-        if (url) {
-            webview.setAttribute('src', url);
+        let pendingCreds = null; // 等待用户决定是否保存的凭据
+
+        /* ── 初始化 webview ─────────────────────────────────── */
+        (async () => {
+            // 从主进程获取 webview_preload.js 的绝对路径，再赋给 webview
+            const preloadPath = await window.electronAPI.getWebviewPreloadPath();
+            webview.setAttribute('preload', `file://${preloadPath}`);
+
+            if (targetUrl) webview.setAttribute('src', targetUrl);
+        })();
+
+        /* ── 页面加载完成 → 尝试自动填充 ───────────────────── */
+        webview.addEventListener('dom-ready', async () => {
+            try {
+                const origin = new URL(webview.getURL()).origin;
+                const creds  = await window.electronAPI.getCredentials(origin);
+                if (creds) {
+                    webview.send('autofill-credentials', creds);
+                }
+            } catch (_) { /* 忽略无效 URL */ }
+        });
+
+        /* ── 接收 webview 内部发来的凭据 ────────────────────── */
+        webview.addEventListener('ipc-message', async event => {
+            if (event.channel !== 'credentials-detected') return;
+
+            const { username, password, origin } = event.args[0];
+
+            // 若与已存储的完全一致则静默跳过
+            const existing = await window.electronAPI.getCredentials(origin);
+            if (existing &&
+                existing.username === username &&
+                existing.password === password) return;
+
+            pendingCreds = { username, password, origin };
+            showBanner(username, origin);
+        });
+
+        /* ── 横幅交互 ────────────────────────────────────────── */
+        function showBanner(username, origin) {
+            document.getElementById('banner-username').textContent = `保存 "${username}" 的密码？`;
+            document.getElementById('banner-origin').textContent   = origin;
+            banner.style.display = 'flex';
         }
+
+        document.getElementById('btn-save').addEventListener('click', async () => {
+            if (pendingCreds) {
+                await window.electronAPI.saveCredentials(pendingCreds);
+                pendingCreds = null;
+            }
+            banner.style.display = 'none';
+        });
+
+        document.getElementById('btn-dismiss').addEventListener('click', () => {
+            pendingCreds = null;
+            banner.style.display = 'none';
+        });
     </script>
 </body>
 </html>

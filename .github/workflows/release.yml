@@ -5,6 +5,8 @@ on:
   push:
     tags:
       - 'v*'
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -35,10 +37,10 @@ jobs:
         run: npm install
 
       - name: Build and release
-        run: npm run release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # 修复 Windows 上 node_modules 扫描时被 SIGINT 中断的问题
           USE_HARD_LINKS: false
           # 修复 macOS 上 dmg-builder 等构建工具从镜像下载 404 的问题
           ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
+        run: npm run release
