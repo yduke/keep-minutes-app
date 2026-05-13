@@ -9,44 +9,56 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-
-    runs-on: ${{ matrix.os }}
+  windows:
+    runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - run: npm install
+      - name: Install dependencies
+        run: npm install
 
-      - name: Build app
+      - name: Build Windows
         env:
           ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
         run: npm run dist
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os }}
-          path: dist/*
+          name: windows-build
+          path: dist/*.exe
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
+  mac:
+    runs-on: macos-latest
+    needs: windows
 
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          files: |
-            Windows/**/*.exe
-            macOS/**/*.dmg
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-build
+          path: dist
+
+      - name: Build and Publish macOS
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+        run: npm run release
