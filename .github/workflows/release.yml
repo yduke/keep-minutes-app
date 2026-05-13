@@ -1,25 +1,27 @@
-name: Build and Release
+name: Release Electron App
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - 'v*'
-  release:
-    types: [published]
 
 permissions:
   contents: write
 
 jobs:
   release:
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        include:
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: win
+
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -27,20 +29,10 @@ jobs:
         with:
           node-version: 20
 
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-
       - name: Install dependencies
         run: npm install
 
-      - name: Build and release
+      - name: Build and publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # 修复 Windows 上 node_modules 扫描时被 SIGINT 中断的问题
-          USE_HARD_LINKS: false
-          # 修复 macOS 上 dmg-builder 等构建工具从镜像下载 404 的问题
-          ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
         run: npm run release
