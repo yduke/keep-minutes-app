@@ -13,12 +13,12 @@
     <div id="errorMsg"></div>
     <input id="urlInput" type="text" placeholder="例如：https://example.com" value="https://" />
     <button id="confirmBtn">确认</button>
-
+ 
     <div id="savedUrls" style="display: none;">
         <h3>最近使用的URL</h3>
         <ul></ul>
     </div>
-
+ 
     <script>
         const urlInput = document.getElementById('urlInput');
         const confirmBtn = document.getElementById('confirmBtn');
@@ -27,85 +27,80 @@
         const savedUrlsList = document.querySelector('#savedUrls ul');
         let hideTimeout = null;
         let savedUrls = [];
-
+ 
         // Load saved URLs from local storage
         window.electronAPI.getURLs().then(urls => {
             savedUrls = urls || [];
-            console.log(savedUrls);
             if (urls.length > 0) {
                 savedUrlsC.style.display = 'block';
-            }else{
+            } else {
                 savedUrlsC.style.display = 'none';
             }
             displaySavedUrls();
         });
-
+ 
         function validateAndSave() {
             const url = urlInput.value.trim();
-            if (url === '' || url === 'https://'|| url === 'http://') {
+            if (url === '' || url === 'https://' || url === 'http://') {
                 showError('URL不能为空');
                 return;
             }
-
+ 
             if (!/^https?:\/\//.test(url)) {
                 showError('必须以 http 或 https 开头');
                 return;
             }
-            fetch(url+'/wp-json/km/v1/posts')
+            fetch(url + '/wp-json/km/v1/posts')
                 .then(response => {
-                    
-                    if (response!==null && response.ok) {
-                        // console.log(response);
+                    if (response !== null && response.ok) {
                         saveURL(url);
+                        // 同时记录为最近一次成功打开的 URL，下次启动直接加载
+                        window.electronAPI.saveLastURL(url);
                         window.location.href = `webview.html?url=${encodeURIComponent(url)}`;
-                    }else{
+                    } else {
                         showError('非KeepMinus站点');
-                        return;
                     }
                 })
                 .catch(error => {
-                    // console.log(error);
                     showError('无法连接到该站点');
-                    return;
                 });
-
         }
-
+ 
         function saveURL(url) {
             if (url.endsWith('/')) {
                 url = url.slice(0, -1);
             }
             window.electronAPI.saveURL(url);
-
+ 
             // Update the local savedUrls array and display
             window.electronAPI.getURLs().then(urls => {
                 savedUrls = urls || [];
                 displaySavedUrls();
             });
         }
-
+ 
         confirmBtn.addEventListener('click', validateAndSave);
-
+ 
         // 监听回车键提交
         urlInput.addEventListener('keypress', (event) => {
             if (event.key === 'Enter') {
                 validateAndSave();
             }
         });
-
+ 
         function showError(message) {
             errorMsg.textContent = message;
             errorMsg.style.display = 'block';
-            
+ 
             if (hideTimeout) clearTimeout(hideTimeout);
             hideTimeout = setTimeout(() => {
                 errorMsg.style.display = 'none';
             }, 3000);
         }
-
+ 
         function displaySavedUrls() {
             savedUrlsList.innerHTML = ''; // Clear existing list
-
+ 
             savedUrls.forEach(url => {
                 const li = document.createElement('li');
                 li.textContent = url;

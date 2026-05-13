@@ -3,9 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const STORE_PATH = path.join(app.getPath('userData'), 'storage.json');
 
-
-
 let mainWindow;
+let store; // 提升到模块级，供菜单回调使用
 
 function createWindow(startURL) {
     mainWindow = new BrowserWindow({
@@ -23,7 +22,10 @@ function createWindow(startURL) {
     // mainWindow.webContents.openDevTools(); // Uncomment this line to open DevTools for debugging
 
     if (startURL) {
-        mainWindow.loadFile(path.join(__dirname, 'views/webview.html'));
+        // 直接携带 URL 参数加载 webview 页面，无需用户重新选择
+        mainWindow.loadFile(path.join(__dirname, 'views/webview.html'), {
+            query: { url: startURL }
+        });
     } else {
         mainWindow.loadFile(path.join(__dirname, 'views/url_input.html'));
     }
@@ -39,13 +41,11 @@ function createWindow(startURL) {
                     title: '确认',
                     message: '确定要更改服务器吗？'
                 }).then(result => {
-                    // If the user clicked "确定"
-                    // console.log(result);
                     if (result.response === 0) {
+                        // 清除最近使用的 URL，下次启动回到输入页
+                        if (store) store.delete('lastUrl');
                         if (fs.existsSync(STORE_PATH)) fs.unlinkSync(STORE_PATH);
                         mainWindow.loadFile(path.join(__dirname, 'views/url_input.html'));
-                    } else {
-                        return;
                     }
                 });
             }
@@ -90,16 +90,18 @@ function createWindow(startURL) {
 
 
 
-app.whenReady().then(async () => { // Make the callback async
-    createWindow();
-    // Dynamically import electron-store
+app.whenReady().then(async () => {
+    // 先初始化 store，再决定启动页面
     const { default: Store } = await import('electron-store');
-    const store = new Store();
+    store = new Store();
+
+    // 读取上次成功打开的 URL，有则直接跳过输入页
+    const lastUrl = store.get('lastUrl') || null;
+    createWindow(lastUrl);
 
     ipcMain.handle('get-urls', async () => {
         return store.get('savedUrls') || [];
     });
-
 
     ipcMain.on('save-url', (event, url) => {
         let urls = store.get('savedUrls') || [];
@@ -113,14 +115,17 @@ app.whenReady().then(async () => { // Make the callback async
         }
     });
 
-
+    // 保存最近一次成功打开的 URL
+    ipcMain.on('save-last-url', (event, url) => {
+        store.set('lastUrl', url);
+    });
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
+            const lastUrl = store.get('lastUrl') || null;
+            createWindow(lastUrl);
         }
     });
-
 
     app.on('window-all-closed', () => {
         if (process.platform !== 'darwin') {
@@ -128,4 +133,3 @@ app.whenReady().then(async () => { // Make the callback async
         }
     });
 });
-
