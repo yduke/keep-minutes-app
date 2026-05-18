@@ -232,6 +232,15 @@ app.whenReady().then(async () => {
         return path.join(__dirname, 'views', 'webview_preload.js');
     });
 
+    /* ── 系统信息相关 IPC（新增） ─────────────────────────── */
+    ipcMain.handle('get-system-info', () => {
+        return {
+            platform: process.platform, // 操作系统的平台 'win32' | 'darwin' | 'linux'
+            isElectron: true,
+            appName: app.getName()      // Electron 应用的名称
+        };
+    });
+
     /* ── macOS 生命周期 ───────────────────────────────────── */
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

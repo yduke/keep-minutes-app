@@ -3,7 +3,12 @@
  * 注入到 webview 内部的预加载脚本
  * 职责：① 检测登录表单提交  ② 接收并自动填充凭据
  */
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, contextBridge } = require('electron');
+
+/* ── 暴露安全接口给内部网页 ─────────────────────────────────── */
+contextBridge.exposeInMainWorld('electronAPI', {
+    getSystemInfo: () => ipcRenderer.invoke('get-system-info')
+});
 
 /* ── 自动填充 ────────────────────────────────────────────────── */
 ipcRenderer.on('autofill-credentials', (_event, { username, password }) => {
